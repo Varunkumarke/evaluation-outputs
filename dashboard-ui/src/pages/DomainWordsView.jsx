@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Save, X, Search, Copy, Download, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Save, X, Search, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './DomainWordsView.css';
 
@@ -9,15 +9,11 @@ const DomainWordsView = ({ onEdit }) => {
   const [filteredDomainWords, setFilteredDomainWords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedWord, setSelectedWord] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    domain_id: ''
-  });
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isEdited, setIsEdited] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   // Fetch all domain words data when component mounts
   const fetchAllDomainWords = async () => {
@@ -61,45 +57,29 @@ const DomainWordsView = ({ onEdit }) => {
     }
   }, [searchTerm, allDomainWords]);
 
-  // Select a domain word to view/edit
-  const selectWord = (word) => {
-    setSelectedWord(word);
+  // Start editing a domain word
+  const startEditing = (word) => {
+    setEditingId(`${word.chapter_id}-${word.domain_id}`);
     setEditData({
       domain_id: word.domain_id || ''
     });
-    setIsEditing(false);
-    setHasUnsavedChanges(false);
   };
 
-  // Check if data has changed
-  const hasDataChanged = (newData, originalWord) => {
-    return newData.domain_id !== originalWord.domain_id;
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditData({});
   };
 
-  const handleInputChange = (field, value) => {
-    setEditData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      // Check if data has changed from original
-      if (selectedWord && hasDataChanged(newData, selectedWord)) {
-        setHasUnsavedChanges(true);
-      } else {
-        setHasUnsavedChanges(false);
-      }
-      
-      return newData;
-    });
-  };
-
-  // Update handleSave to call onEdit only on save
-  const handleSave = async () => {
+  // Save domain word
+  const handleSave = async (word) => {
     if (!editData.domain_id.trim()) {
       alert('Domain ID cannot be empty');
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/domain-words/${selectedWord.chapter_id}/${selectedWord.domain_id}`, {
+      const response = await fetch(`http://localhost:8000/domain-words/${word.chapter_id}/${word.domain_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -113,42 +93,36 @@ const DomainWordsView = ({ onEdit }) => {
         throw new Error('Failed to update domain word');
       }
 
-      const result = await response.json();
-      alert('Domain ID updated successfully!');
-      
       // Update local state
-      const updatedWords = allDomainWords.map(word => 
-        word.chapter_id === selectedWord.chapter_id && word.domain_id === selectedWord.domain_id
-          ? { ...word, domain_id: editData.domain_id }
-          : word
+      const updatedWords = allDomainWords.map(w => 
+        w.chapter_id === word.chapter_id && w.domain_id === word.domain_id
+          ? { ...w, domain_id: editData.domain_id }
+          : w
       );
       
       setAllDomainWords(updatedWords);
       setFilteredDomainWords(updatedWords);
-      setSelectedWord({ ...selectedWord, domain_id: editData.domain_id });
-      setIsEditing(false);
-      setHasUnsavedChanges(false);
+      setEditingId(null);
+      setEditData({});
       
-      // Mark as edited only after successful save
-      // 
-      // Mark as edited only after successful save
+      // Mark as edited
       if (!isEdited) {
         setIsEdited(true);
         if (onEdit) {
           onEdit(`Updated domain ID to: ${editData.domain_id}`);
         }
       }
+      
+      alert('Domain ID updated successfully!');
     } catch (err) {
       alert('Error updating domain ID: ' + err.message);
     }
   };
 
   // Delete domain word
-  const handleDelete = async () => {
-    if (!selectedWord) return;
-
+  const handleDelete = async (word) => {
     try {
-      const response = await fetch(`http://localhost:8000/domain-words/${selectedWord.chapter_id}/${selectedWord.domain_id}`, {
+      const response = await fetch(`http://localhost:8000/domain-words/${word.chapter_id}/${word.domain_id}`, {
         method: 'DELETE',
       });
 
@@ -157,81 +131,26 @@ const DomainWordsView = ({ onEdit }) => {
       }
 
       // Remove from local state
-      const updatedWords = allDomainWords.filter(word => 
-        !(word.chapter_id === selectedWord.chapter_id && word.domain_id === selectedWord.domain_id)
+      const updatedWords = allDomainWords.filter(w => 
+        !(w.chapter_id === word.chapter_id && w.domain_id === word.domain_id)
       );
       
       setAllDomainWords(updatedWords);
       setFilteredDomainWords(updatedWords);
-      setSelectedWord(null);
-      setShowDeleteConfirm(false);
+      setShowDeleteConfirm(null);
       
       // Mark as edited
-      // if (!isEdited) {
-      //   setIsEdited(true);
-      //   if (onEdit) {
-      //     onEdit();
-      //   }
-      // }
-      // Mark as edited
-        if (!isEdited) {
-          setIsEdited(true);
-          if (onEdit) {
-            onEdit(`Deleted word: ${selectedWord.name} (${selectedWord.domain_id})`);
-          }
+      if (!isEdited) {
+        setIsEdited(true);
+        if (onEdit) {
+          onEdit(`Deleted word: ${word.name} (${word.domain_id})`);
         }
+      }
       
       alert('Domain word deleted successfully!');
     } catch (err) {
       alert('Error deleting domain word: ' + err.message);
     }
-  };
-
-  // Show delete confirmation
-  const confirmDelete = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  // Cancel delete
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-  };
-
-  // Start editing
-  const startEditing = () => {
-    setIsEditing(true);
-  };
-
-  // Cancel editing
-  const cancelEditing = () => {
-    setIsEditing(false);
-    setEditData({
-      domain_id: selectedWord.domain_id || ''
-    });
-    setHasUnsavedChanges(false);
-  };
-
-  // Copy to clipboard
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(selectedWord.domain_id);
-      alert('Domain ID copied to clipboard!');
-    } catch (err) {
-      alert('Failed to copy to clipboard');
-    }
-  };
-
-  // Download as text file
-  const downloadAsFile = () => {
-    const blob = new Blob([selectedWord.domain_id], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedWord.domain_id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -277,152 +196,98 @@ const DomainWordsView = ({ onEdit }) => {
         <div className="loading">Loading all domain words data...</div>
       )}
 
-      {/* Domain Words List and Editor */}
+      {/* Domain Words Table */}
       {!loading && (
-        <div className="content-layout">
-          {/* Domain Words List */}
-          <div className="words-list">
-            <h3>All Domain Words ({filteredDomainWords.length})</h3>
-            <div className="words-container">
-              {filteredDomainWords.length === 0 ? (
-                <div className="no-data">No domain words found</div>
-              ) : (
-                filteredDomainWords.map((word, index) => (
-                  <div 
-                    key={`${word.chapter_id}-${word.domain_id}`}
-                    className={`word-item ${selectedWord?.chapter_id === word.chapter_id && selectedWord?.domain_id === word.domain_id ? 'active' : ''}`}
-                    onClick={() => selectWord(word)}
-                  >
-                    <div className="word-header">
-                      <div className="word-name">{word.name}</div>
-                      <div className="word-id">{word.domain_id}</div>
-                    </div>
-                    <div className="word-details">
-                      <div className="chapter-id">{word.chapter_id}</div>
-                      <div className="word-preview">
-                        {word.definition.substring(0, 80)}...
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+        <div className="words-table-container">
+          {filteredDomainWords.length === 0 ? (
+            <div className="no-data">
+              <Search size={48} />
+              <h3>No Domain Words Found</h3>
+              <p>No domain words match your search criteria</p>
             </div>
-          </div>
-
-          {/* Domain Word Editor */}
-          <div className="editor-section">
-            {selectedWord ? (
-              <div className="domain-editor-container">
-                <div className="editor-header">
-                  <div className="editor-title">
-                    <h3>Domain ID</h3>
-                    <div className="word-info">
-                      <span>Chapter: {selectedWord.chapter_id}</span>
-                      <span>Word Name: {selectedWord.name}</span>
-                      {hasUnsavedChanges && <span className="unsaved-changes">Unsaved Changes</span>}
-                    </div>
-                  </div>
-                  <div className="editor-actions">
-                    {!isEditing ? (
-                      <>
-                        <button 
-                          className="action-btn copy-btn"
-                          onClick={copyToClipboard}
-                        >
-                          <Copy size={16} />
-                          Copy
-                        </button>
-                        <button 
-                          className="action-btn download-btn"
-                          onClick={downloadAsFile}
-                        >
-                          <Download size={16} />
-                          Download
-                        </button>
-                        <button 
-                          className="action-btn edit-btn"
-                          onClick={startEditing}
-                        >
-                          <Edit size={16} />
-                          Edit
-                        </button>
-                        <button 
-                          className="action-btn delete-btn"
-                          onClick={confirmDelete}
-                        >
-                          <Trash2 size={16} />
-                          Delete
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button 
-                          className="action-btn save-btn"
-                          onClick={handleSave}
-                          disabled={!hasUnsavedChanges}
-                        >
-                          <Save size={16} />
-                          Save
-                        </button>
-                        <button 
-                          className="action-btn cancel-btn"
-                          onClick={cancelEditing}
-                        >
-                          <X size={16} />
-                          Cancel
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="editor-content">
-                  <div className="word-details-grid">
-                    {/* Only Domain ID Section */}
-                    <div className="detail-section">
-                      <h4>Domain ID</h4>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          className="definition-textarea"
-                          value={editData.domain_id}
-                          onChange={(e) => handleInputChange('domain_id', e.target.value)}
-                          placeholder="Enter domain ID..."
-                          style={{
-                            padding: '1rem',
-                            border: '2px solid #3b82f6',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            fontFamily: 'inherit',
-                            background: 'white',
-                            color: '#374151',
-                            width: '100%'
-                          }}
-                        />
-                      ) : (
-                        <div className="definition-display" style={{ 
-                          fontSize: '1.5rem', 
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          padding: '2rem'
-                        }}>
-                          {selectedWord.domain_id}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="no-selection">
-                <div className="no-selection-icon">
-                  <Search size={48} />
-                </div>
-                <h3>Select a Domain Word</h3>
-                <p>Click on a domain word from the list to view and edit its domain ID</p>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="table-wrapper">
+              <table className="words-table">
+                <thead>
+                  <tr>
+                    <th>Word Name</th>
+                    <th>Domain ID</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDomainWords.map((word) => {
+                    const wordId = `${word.chapter_id}-${word.domain_id}`;
+                    const isEditing = editingId === wordId;
+                    
+                    return (
+                      <tr key={wordId} className={isEditing ? 'editing-row' : ''}>
+                        {/* Word Name - Clean version without chapter ID and definition */}
+                        <td className="word-name-cell">
+                          <div className="word-name">{word.name}</div>
+                        </td>
+                        
+                        {/* Domain ID - Editable */}
+                        <td className="domain-id-cell">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editData.domain_id}
+                              onChange={(e) => setEditData({ domain_id: e.target.value })}
+                              className="domain-id-input"
+                              placeholder="Enter domain ID..."
+                            />
+                          ) : (
+                            <div className="domain-id-display">{word.domain_id}</div>
+                          )}
+                        </td>
+                        
+                        {/* Actions - Removed Copy and Download buttons */}
+                        <td className="actions-cell">
+                          {isEditing ? (
+                            <div className="edit-actions">
+                              <button 
+                                className="action-btn save-btn"
+                                onClick={() => handleSave(word)}
+                                disabled={!editData.domain_id.trim()}
+                              >
+                                <Save size={16} />
+                                Save
+                              </button>
+                              <button 
+                                className="action-btn cancel-btn"
+                                onClick={cancelEditing}
+                              >
+                                <X size={16} />
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="view-actions">
+                              <button 
+                                className="action-btn edit-btn"
+                                onClick={() => startEditing(word)}
+                              >
+                                <Edit size={16} />
+                                Edit
+                              </button>
+                              <button 
+                                className="action-btn delete-btn"
+                                onClick={() => setShowDeleteConfirm(word)}
+                              >
+                                <Trash2 size={16} />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -434,19 +299,19 @@ const DomainWordsView = ({ onEdit }) => {
               <h3>Confirm Delete</h3>
             </div>
             <div className="modal-body">
-              <p>Are you sure you want to delete the domain word "<strong>{selectedWord?.name}</strong>" (ID: {selectedWord?.domain_id})?</p>
+              <p>Are you sure you want to delete the domain word "<strong>{showDeleteConfirm.name}</strong>" (ID: {showDeleteConfirm.domain_id})?</p>
               <p className="warning-text">This action cannot be undone.</p>
             </div>
             <div className="modal-actions">
               <button 
                 className="action-btn cancel-btn"
-                onClick={cancelDelete}
+                onClick={() => setShowDeleteConfirm(null)}
               >
                 Cancel
               </button>
               <button 
                 className="action-btn delete-confirm-btn"
-                onClick={handleDelete}
+                onClick={() => handleDelete(showDeleteConfirm)}
               >
                 <Trash2 size={16} />
                 Delete
