@@ -1,0 +1,20 @@
+# Node.js (React frontend)
+node_modules/
+build/
+dist/
+
+# Python (backend)
+__pycache__/
+*.pyc
+instance/
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/

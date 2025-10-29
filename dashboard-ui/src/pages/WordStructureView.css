@@ -1,0 +1,570 @@
+/* WordStructureView.css - Scoped styles to prevent conflicts */
+.word-structure-container {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 2rem !important;
+  min-height: 100vh !important;
+}
+
+.word-structure-container .view-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 2rem !important;
+  padding-bottom: 1rem !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.word-structure-container .back-button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  background: #3b82f6 !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  transition: background-color 0.2s !important;
+}
+
+.word-structure-container .back-button:hover {
+  background: #2563eb !important;
+}
+
+.word-structure-container .view-header h1 {
+  color: #1e293b !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+}
+
+.word-structure-container .view-header p {
+  color: #64748b !important;
+  margin: 0 !important;
+}
+
+/* Search Section */
+.word-structure-container .search-section {
+  background: white !important;
+  padding: 1.5rem !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+  margin-bottom: 2rem !important;
+}
+
+.word-structure-container .search-input-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+
+.word-structure-container .search-label {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  font-size: 0.9rem !important;
+}
+
+.word-structure-container .input-with-button {
+  display: flex !important;
+  gap: 1rem !important;
+  align-items: center !important;
+}
+
+.word-structure-container .domain-input {
+  flex: 1 !important;
+  padding: 0.75rem 1rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  background: white !important;
+  color: #374151 !important;
+}
+
+.word-structure-container .domain-input:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.word-structure-container .search-stats {
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+}
+
+/* Content Layout */
+.word-structure-container .content-layout {
+  display: flex !important;
+  gap: 2rem !important;
+  min-height: 600px !important;
+}
+
+/* Words List */
+.word-structure-container .words-list {
+  flex: 0 0 350px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.word-structure-container .words-list h3 {
+  padding: 1.5rem !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+}
+
+.word-structure-container .words-container {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 1rem !important;
+}
+
+.word-structure-container .word-item {
+  padding: 1rem !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin-bottom: 0.75rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.word-structure-container .word-item:hover {
+  border-color: #3b82f6 !important;
+  background: #f8fafc !important;
+}
+
+.word-structure-container .word-item.active {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+}
+
+.word-structure-container .word-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.word-structure-container .word-name {
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  font-size: 1rem !important;
+}
+
+.word-structure-container .word-id {
+  background: #e2e8f0 !important;
+  color: #64748b !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 4px !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+}
+
+.word-structure-container .word-details {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+}
+
+.word-structure-container .chapter-id {
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+}
+
+.word-structure-container .structure-preview {
+  font-size: 0.85rem !important;
+  color: #64748b !important;
+  font-style: italic !important;
+}
+
+/* Editor Section */
+.word-structure-container .editor-section {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.word-structure-container .structure-editor-container {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.word-structure-container .editor-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  padding: 1.5rem !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+}
+
+.word-structure-container .editor-title h3 {
+  margin: 0 0 0.75rem 0 !important;
+  color: #1e293b !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.word-structure-container .word-info {
+  display: flex !important;
+  gap: 1rem !important;
+  flex-wrap: wrap !important;
+}
+
+.word-structure-container .word-info span {
+  font-size: 0.9rem !important;
+  color: #64748b !important;
+  background: #e2e8f0 !important;
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 12px !important;
+}
+
+.word-structure-container .unsaved-changes {
+  color: #f59e0b !important;
+  font-weight: bold !important;
+  background-color: #fef3c7 !important;
+}
+
+.word-structure-container .editor-actions {
+  display: flex !important;
+  gap: 0.75rem !important;
+  flex-shrink: 0 !important;
+}
+
+.word-structure-container .action-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.75rem 1.25rem !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s !important;
+  white-space: nowrap !important;
+}
+
+.word-structure-container .edit-btn {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
+.word-structure-container .edit-btn:hover {
+  background: #fde68a !important;
+}
+
+.word-structure-container .save-btn {
+  background: #d1fae5 !important;
+  color: #059669 !important;
+}
+
+.word-structure-container .save-btn:hover:not(:disabled) {
+  background: #a7f3d0 !important;
+}
+
+.word-structure-container .save-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.word-structure-container .cancel-btn {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+.word-structure-container .cancel-btn:hover {
+  background: #fecaca !important;
+}
+
+/* Editor Content */
+.word-structure-container .editor-content {
+  flex: 1 !important;
+  padding: 1.5rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2rem !important;
+  overflow: visible !important;
+  min-height: auto !important;
+}
+
+.word-structure-container .structure-section {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 1.5rem !important;
+}
+
+.word-structure-container .section-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 1rem !important;
+}
+
+.word-structure-container .section-header h4 {
+  color: #1e293b !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+.word-structure-container .add-field-btn {
+  background: #10b981 !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  transition: background-color 0.2s !important;
+}
+
+.word-structure-container .add-field-btn:hover {
+  background: #059669 !important;
+}
+
+/* Structure Edit */
+.word-structure-container .structure-edit {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+}
+
+.word-structure-container .structure-field-edit {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  background: white !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.word-structure-container .field-name-input {
+  flex: 1 !important;
+  padding: 0.75rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  font-size: 0.9rem !important;
+  background: white !important;
+  color: #374151 !important;
+}
+
+.word-structure-container .field-value-input {
+  flex: 2 !important;
+  padding: 0.75rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  font-size: 0.9rem !important;
+  background: white !important;
+  color: #374151 !important;
+}
+
+.word-structure-container .field-name-input:focus,
+.word-structure-container .field-value-input:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+.word-structure-container .remove-field-btn {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  transition: background-color 0.2s !important;
+}
+
+.word-structure-container .remove-field-btn:hover {
+  background: #fecaca !important;
+}
+
+.word-structure-container .no-fields {
+  text-align: center !important;
+  padding: 2rem !important;
+  color: #64748b !important;
+  font-style: italic !important;
+  background: white !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Structure Display */
+.word-structure-container .structure-display {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+}
+
+.word-structure-container .structure-field {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  background: white !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.word-structure-container .structure-field strong {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  min-width: 120px !important;
+}
+
+.word-structure-container .structure-field span {
+  flex: 1 !important;
+  line-height: 1.5 !important;
+  color: #374151 !important;
+}
+
+.word-structure-container .no-structure {
+  text-align: center !important;
+  padding: 2rem !important;
+  color: #64748b !important;
+  font-style: italic !important;
+  background: white !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* No Selection State */
+.word-structure-container .no-selection {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  color: #64748b !important;
+  padding: 3rem !important;
+  height: 100% !important;
+}
+
+.word-structure-container .no-selection-icon {
+  margin-bottom: 1rem !important;
+  color: #cbd5e1 !important;
+}
+
+.word-structure-container .no-selection h3 {
+  margin: 0 0 0.5rem 0 !important;
+  color: #475569 !important;
+}
+
+.word-structure-container .no-selection p {
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+}
+
+/* Status Indicators */
+.word-structure-container .edit-indicator {
+  color: #10b981 !important;
+  font-size: 0.8em !important;
+  font-weight: normal !important;
+  margin-left: 8px !important;
+}
+
+/* Loading and Error States */
+.word-structure-container .loading {
+  text-align: center !important;
+  padding: 3rem !important;
+  font-size: 1.2rem !important;
+  color: #64748b !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 400px !important;
+}
+
+.word-structure-container .error-message {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #dc2626 !important;
+  border-radius: 8px !important;
+  margin-bottom: 2rem !important;
+  padding: 1.5rem !important;
+  text-align: center !important;
+}
+
+.word-structure-container .no-data {
+  text-align: center !important;
+  padding: 2rem !important;
+  color: #64748b !important;
+  font-style: italic !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .word-structure-container .content-layout {
+    flex-direction: column !important;
+  }
+  
+  .word-structure-container .words-list {
+    flex: none !important;
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .word-structure-container {
+    padding: 1rem !important;
+  }
+
+  .word-structure-container .view-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+  }
+
+  .word-structure-container .editor-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+  }
+
+  .word-structure-container .editor-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .word-structure-container .word-info {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .word-structure-container .input-with-button {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .word-structure-container .structure-field-edit {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+
+  .word-structure-container .section-header {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+}
