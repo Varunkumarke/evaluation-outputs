@@ -12,6 +12,8 @@ import Signup from './pages/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import ActivityLog from './pages/ActivityLog';
 import WordStructureView from './pages/WordStructureView';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Create a simple logging system
 const activityLog = {
@@ -152,7 +154,9 @@ function App() {
             <ActivityLog activityLogs={activityLogs} stats={activityLog.getStats()} />
           </ProtectedRoute>
         } />
-        
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

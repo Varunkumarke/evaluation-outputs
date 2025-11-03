@@ -145,3 +145,186 @@
   color: #374151;
   padding: 0.5rem;
 }
+/* Forgot Password Styles */
+.forgot-password-link {
+  text-align: right;
+  margin-bottom: 1.5rem;
+}
+
+.forgot-password-link .auth-link {
+  font-size: 0.875rem;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.forgot-password-link .auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.2s;
+}
+
+.auth-back-button:hover {
+  background: #e2e8f0;
+}
+
+.success-icon {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.success-message {
+  text-align: center;
+  color: #059669;
+  background: #d1fae5;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #a7f3d0;
+}
+
+.success-actions {
+  text-align: center;
+}
+
+.auth-button.secondary {
+  background: #f1f5f9;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.auth-button.secondary:hover {
+  background: #e2e8f0;
+}
+
+.auth-note {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.auth-note .auth-link {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Input with icon */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.input-with-icon input {
+  padding-left: 40px;
+}
+
+.reset-code-container {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.reset-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #1e293b;
+  margin: 10px 0;
+}
+
+.copy-button {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.copy-button:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.code-expiry {
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.email-instructions {
+  text-align: center;
+  color: #6b7280;
+  margin: 15px 0;
+  line-height: 1.5;
+}
+
+.password-input-container {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.password-toggle:hover {
+  color: #374151;
+}
+
+.auth-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.auth-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.auth-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}

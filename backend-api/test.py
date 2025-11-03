@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.responses import Response
+from fastapi.responses import Response,HTMLResponse 
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from typing import List
@@ -777,6 +777,13 @@ class UserLoginRequest(BaseModel):
     username: str
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 # ---------------------- SIGNUP ---------------------- #
 @app.post("/signup")
 async def signup(user_data: UserSignupRequest):
@@ -877,3 +884,168 @@ async def logout(session_token: str):
         return {"message": "Logout successful"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during logout: {str(e)}")
+
+# ====================== EMAIL CONFIGURATION ====================== #
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# Update with your actual email credentials
+SMTP_CONFIG = {
+    "server": "smtp.gmail.com",
+    "port": 587,
+    "email": "varunclg5@gmail.com",    # Replace with your Gmail
+    "password": "hfsw fvfd wvyz rbck"     # Replace with Gmail App Password
+}
+
+async def send_password_reset_email(email: str, reset_token: str):
+    """Send password reset email with reset link"""
+    try:
+        # Create reset link - points to your React frontend
+        reset_link = f"http://localhost:5173/reset-password/{reset_token}"
+        
+        # Email content
+        subject = "Password Reset Request"
+        body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .button {{ background-color: #3b82f6; color: white; padding: 12px 24px; 
+                         text-decoration: none; border-radius: 6px; display: inline-block; }}
+                .footer {{ color: #6b7280; font-size: 14px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>Password Reset Request</h2>
+                <p>Hello,</p>
+                <p>You requested to reset your password. Click the button below to create a new password:</p>
+                
+                <p style="text-align: center; margin: 30px 0;">
+                    <a href="{reset_link}" class="button">Reset Your Password</a>
+                </p>
+                
+                <p>Or copy and paste this link in your browser:</p>
+                <p style="word-break: break-all; color: #6b7280; background: #f8fafc; padding: 10px; border-radius: 4px;">
+                    {reset_link}
+                </p>
+                
+                <p>This link will expire in 1 hour.</p>
+                <p>If you didn't request this reset, please ignore this email.</p>
+                
+                <div class="footer">
+                    <p>Best regards,<br>Your App Team</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_CONFIG["email"]
+        msg['To'] = email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+        
+        # Send email
+        server = smtplib.SMTP(SMTP_CONFIG["server"], SMTP_CONFIG["port"])
+        server.starttls()
+        server.login(SMTP_CONFIG["email"], SMTP_CONFIG["password"])
+        server.send_message(msg)
+        server.quit()
+        
+        print(f"✅ Password reset email sent to {email}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to send email to {email}: {str(e)}")
+        return False    
+
+
+# ====================== FORGOT PASSWORD ENDPOINT ====================== #
+@app.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    try:
+        # Find user by email
+        user = await db["users"].find_one({"email": request.email})
+
+        if not user:
+            # For security, don't reveal if email exists
+            return JSONResponse(content={
+                "message": "If that email address is in our database, we will send you a password reset link."
+            })
+
+        # Generate secure reset token
+        reset_token = secrets.token_urlsafe(32)
+
+        # Store reset token in database (with expiration)
+        await db["password_resets"].insert_one({
+            "user_id": str(user["_id"]),
+            "email": request.email,
+            "reset_token": reset_token,
+            "created_at": datetime.datetime.utcnow(),
+            "expires_at": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        })
+
+        # Send email with reset link
+        email_sent = await send_password_reset_email(request.email, reset_token)
+        
+        if not email_sent:
+            # Fallback: Return token for development
+            return JSONResponse(content={
+                "message": "Password reset instructions have been sent to your email.",
+                "development_token": reset_token  # Remove in production
+            })
+
+        return JSONResponse(content={
+            "message": "Password reset instructions have been sent to your email."
+        })
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
+# ====================== RESET PASSWORD ENDPOINT ====================== #
+@app.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    try:
+        # Find valid reset token
+        reset_record = await db["password_resets"].find_one({
+            "reset_token": request.token,
+            "expires_at": {"$gt": datetime.datetime.utcnow()}
+        })
+
+        if not reset_record:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+        # Hash new password
+        hashed_password = hashlib.sha256(request.new_password.encode()).hexdigest()
+
+        # Update user password
+        await db["users"].update_one(
+            {"_id": reset_record["user_id"]},
+            {"$set": {"password": hashed_password}}
+        )
+
+        # Delete used reset token
+        await db["password_resets"].delete_one({"reset_token": request.token})
+
+        # Delete all user sessions (for security)
+        await db["sessions"].delete_many({"user_id": reset_record["user_id"]})
+
+        return JSONResponse(content={
+            "message": "Password has been reset successfully. You can now login with your new password."
+        })
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error resetting password: {str(e)}")
+
+
+
+
+
+    
+

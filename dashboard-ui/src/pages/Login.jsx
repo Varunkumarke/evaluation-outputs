@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Add Link import
 import './Auth.css';
 
 const Login = () => {
@@ -89,6 +89,13 @@ const Login = () => {
               required
               placeholder="Enter your password"
             />
+          </div>
+
+          {/* ADD THIS: Forgot Password Link */}
+          <div className="forgot-password-link">
+            <Link to="/forgot-password" className="auth-link">
+              Forgot your password?
+            </Link>
           </div>
 
           <button 
