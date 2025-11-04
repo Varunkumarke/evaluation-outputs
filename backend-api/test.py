@@ -282,10 +282,19 @@ async def create_section_summary(chapter_id: str, section_id: str, data: Section
 # ====================== DOMAIN WORDS ENDPOINTS ====================== #
 
 # ---------------------- PYDANTIC MODELS FOR DOMAIN WORDS ---------------------- #
+# class DomainWordUpdateRequest(BaseModel):
+#     definition: str
+#     translations: dict
+#     word_structure: dict
+
 class DomainWordUpdateRequest(BaseModel):
-    definition: str
-    translations: dict
-    word_structure: dict
+    definition: str = None  # Make optional
+    translations: dict = None  # Make optional  
+    word_structure: dict = None  # Make optional
+    domain_id: str = None  # Add domain_id field for updating ID
+    name: str = None  # Add other fields that might need updating
+    is_mwe: bool = None
+    mwe_type: str = None
 
 class DomainWordCreateRequest(BaseModel):
     chapter_id: str
@@ -350,26 +359,68 @@ async def get_domain_word(chapter_id: str, domain_id: str):
 # ---------------------- UPDATE DOMAIN WORD ---------------------- #
 @app.put("/domain-words/{chapter_id}/{domain_id}")
 async def update_domain_word(chapter_id: str, domain_id: str, data: DomainWordUpdateRequest):
-    doc = await db["domain_words"].find_one({
-        "chapter_id": chapter_id,
-        "domain_id": domain_id
-    })
-    if not doc:
-        raise HTTPException(status_code=404, detail=f"Domain word '{domain_id}' not found for chapter '{chapter_id}'")
-    
-    await db["domain_words"].update_one(
-        {"chapter_id": chapter_id, "domain_id": domain_id},
-        {"$set": {
-            "definition": data.definition,
-            "translations": data.translations,
-            "word_structure": data.word_structure
-        }}
-    )
-    return JSONResponse(content={
-        "message": f"Domain word '{domain_id}' updated successfully",
-        "domain_id": domain_id,
-        "chapter_id": chapter_id
-    })
+    try:
+        # DEBUG: Log the incoming request
+        print(f"🔍 DEBUG - Update Domain Word Request:")
+        print(f"📁 Chapter ID: {chapter_id}")
+        print(f"📝 Domain ID: {domain_id}")
+        print(f"📦 Received data: {data.dict()}")
+        print("=" * 60)
+        
+        # Find the document
+        doc = await db["domain_words"].find_one({
+            "chapter_id": chapter_id,
+            "domain_id": domain_id
+        })
+        
+        if not doc:
+            raise HTTPException(status_code=404, detail=f"Domain word '{domain_id}' not found for chapter '{chapter_id}'")
+        
+        # Build update fields dynamically - only include fields that are provided
+        update_fields = {}
+        if data.definition is not None:
+            update_fields["definition"] = data.definition
+        if data.translations is not None:
+            update_fields["translations"] = data.translations
+        if data.word_structure is not None:
+            update_fields["word_structure"] = data.word_structure
+        if data.domain_id is not None:
+            update_fields["domain_id"] = data.domain_id
+        if data.name is not None:
+            update_fields["name"] = data.name
+        if data.is_mwe is not None:
+            update_fields["is_mwe"] = data.is_mwe
+        if data.mwe_type is not None:
+            update_fields["mwe_type"] = data.mwe_type
+        
+        # If no fields to update, return early
+        if not update_fields:
+            return JSONResponse(content={
+                "message": "No fields to update",
+                "domain_id": domain_id,
+                "chapter_id": chapter_id
+            })
+        
+        # DEBUG: Log what we're updating
+        print(f"🔄 Updating fields: {list(update_fields.keys())}")
+        
+        # Perform the update
+        await db["domain_words"].update_one(
+            {"chapter_id": chapter_id, "domain_id": domain_id},
+            {"$set": update_fields}
+        )
+        
+        print(f"✅ Domain word '{domain_id}' updated successfully")
+        return JSONResponse(content={
+            "message": f"Domain word updated successfully",
+            "updated_fields": list(update_fields.keys()),
+            "domain_id": data.domain_id or domain_id,  # Return new domain_id if changed
+            "chapter_id": chapter_id
+        })
+        
+    except Exception as e:
+        print(f"❌ Error updating domain word: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating domain word: {str(e)}")
 
 # ---------------------- CREATE DOMAIN WORD ---------------------- #
 @app.post("/domain-words/{chapter_id}/{domain_id}")
