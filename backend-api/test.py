@@ -6,6 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from typing import List
 
+
 app = FastAPI(title="Full Summary API")
 
 # ---------------------- CORS Setup ---------------------- #

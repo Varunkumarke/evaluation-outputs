@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext'; // ✅ ADD THIS IMPORT
 import './Auth.css';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { success, error } = useToast(); // ✅ ADD THIS LINE
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -12,7 +14,7 @@ const Signup = () => {
     domain: ''  // ADD DOMAIN FIELD
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState(''); // ✅ RENAMED to avoid conflict
 
   // Domain options
   const domainOptions = [
@@ -38,23 +40,26 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setComponentError('');
 
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setComponentError('Passwords do not match');
+      error('Passwords do not match'); // ✅ TOAST FOR VALIDATION ERROR
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setComponentError('Password must be at least 6 characters long');
+      error('Password must be at least 6 characters long'); // ✅ TOAST FOR VALIDATION ERROR
       setLoading(false);
       return;
     }
 
     if (!formData.domain) {
-      setError('Please select a domain');
+      setComponentError('Please select a domain');
+      error('Please select a domain'); // ✅ TOAST FOR VALIDATION ERROR
       setLoading(false);
       return;
     }
@@ -78,11 +83,11 @@ const Signup = () => {
         throw new Error(errorData.detail || 'Signup failed');
       }
 
-      navigate('/login', { 
-        state: { message: 'Account created successfully! Please sign in.' }
-      });
+      success('Account created successfully! Please sign in.'); // ✅ TOAST FOR SUCCESS
+      navigate('/login');
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error(err.message); // ✅ TOAST FOR API ERROR
     } finally {
       setLoading(false);
     }
@@ -94,9 +99,9 @@ const Signup = () => {
         <h2>Create Account</h2>
         <p className="auth-subtitle">Sign up for a new account</p>
         
-        {error && (
+        {componentError && ( // ✅ UPDATED VARIABLE NAME
           <div className="auth-error">
-            {error}
+            {componentError}
           </div>
         )}
 

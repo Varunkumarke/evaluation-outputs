@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X, Search } from 'lucide-react';
+import { useToast } from '../context/ToastContext'; // ✅ ADD THIS IMPORT
 import './DefinitionView.css';
 
 const DefinitionView = ({ onEdit }) => {
   const navigate = useNavigate();
+  const { success, error } = useToast(); // ✅ ADD THIS LINE
   const [allDomainWords, setAllDomainWords] = useState([]);
   const [filteredDomainWords, setFilteredDomainWords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState(''); // ✅ RENAMED to avoid conflict
   const [selectedWord, setSelectedWord] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -23,7 +25,7 @@ const DefinitionView = ({ onEdit }) => {
   const fetchAllDomainWords = async () => {
     try {
       setLoading(true);
-      setError('');
+      setComponentError('');
       const response = await fetch('http://localhost:8000/all-domain-words');
       
       if (!response.ok) {
@@ -34,7 +36,8 @@ const DefinitionView = ({ onEdit }) => {
       setAllDomainWords(data.domain_words || []);
       setFilteredDomainWords(data.domain_words || []);
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error('Failed to load domain words: ' + err.message); // ✅ TOAST FOR FETCH ERROR
       setAllDomainWords([]);
       setFilteredDomainWords([]);
     } finally {
@@ -86,7 +89,8 @@ const DefinitionView = ({ onEdit }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update domain word definition');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update domain word definition');
       }
 
       // Update local state
@@ -118,9 +122,9 @@ const DefinitionView = ({ onEdit }) => {
         }
       }
       
-      alert('Definition and translations updated successfully!');
+      success('Definition and translations updated successfully!'); // ✅ TOAST INSTEAD OF ALERT
     } catch (err) {
-      alert('Error updating definition: ' + err.message);
+      error('Error updating definition: ' + err.message); // ✅ TOAST INSTEAD OF ALERT
     }
   };
 
@@ -170,9 +174,9 @@ const DefinitionView = ({ onEdit }) => {
         </div>
       </div>
 
-      {error && (
+      {componentError && ( // ✅ UPDATED VARIABLE NAME
         <div className="error-message">
-          {error}
+          {componentError}
         </div>
       )}
 
@@ -330,4 +334,3 @@ const DefinitionView = ({ onEdit }) => {
 };
 
 export default DefinitionView;
-

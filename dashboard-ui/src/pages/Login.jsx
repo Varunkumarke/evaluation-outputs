@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Add Link import
+import { useNavigate, Link } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { success, error } = useToast();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -21,7 +23,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setComponentError('');
+
+    // Basic validation
+    if (!formData.username || !formData.password) {
+      setComponentError('Please fill in all fields');
+      error('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('http://localhost:8000/login', {
@@ -43,10 +53,14 @@ const Login = () => {
       localStorage.setItem('session_token', data.session_token);
       localStorage.setItem('username', data.username);
       
+      // Show success message
+      success('Login successful! Welcome back.');
+      
       // Redirect to dashboard
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error(err.message);
     } finally {
       setLoading(false);
     }
@@ -58,9 +72,9 @@ const Login = () => {
         <h2>Welcome Back</h2>
         <p className="auth-subtitle">Sign in to your account</p>
         
-        {error && (
+        {componentError && (
           <div className="auth-error">
-            {error}
+            {componentError}
           </div>
         )}
 
@@ -91,7 +105,6 @@ const Login = () => {
             />
           </div>
 
-          {/* ADD THIS: Forgot Password Link */}
           <div className="forgot-password-link">
             <Link to="/forgot-password" className="auth-link">
               Forgot your password?

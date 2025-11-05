@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import './Auth.css';
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { success, error } = useToast();
   const [formData, setFormData] = useState({
     newPassword: '',
     confirmPassword: ''
@@ -13,8 +15,7 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+  const [componentError, setComponentError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -26,18 +27,18 @@ const ResetPasswordPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setComponentError('');
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setMessage('Passwords do not match!');
-      setMessageType('error');
+      setComponentError('Passwords do not match!');
+      error('Passwords do not match!');
       setLoading(false);
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      setMessage('Password must be at least 6 characters long!');
-      setMessageType('error');
+      setComponentError('Password must be at least 6 characters long!');
+      error('Password must be at least 6 characters long!');
       setLoading(false);
       return;
     }
@@ -60,8 +61,7 @@ const ResetPasswordPage = () => {
       }
 
       const data = await response.json();
-      setMessage(data.message || 'Password reset successfully!');
-      setMessageType('success');
+      success(data.message || 'Password reset successfully!');
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
@@ -69,8 +69,8 @@ const ResetPasswordPage = () => {
       }, 3000);
 
     } catch (err) {
-      setMessage(err.message);
-      setMessageType('error');
+      setComponentError(err.message);
+      error(err.message);
     } finally {
       setLoading(false);
     }
@@ -92,10 +92,9 @@ const ResetPasswordPage = () => {
           Enter your new password below
         </p>
 
-        {message && (
-          <div className={`auth-message ${messageType === 'success' ? 'auth-success' : 'auth-error'}`}>
-            {messageType === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
-            {message}
+        {componentError && (
+          <div className="auth-error">
+            {componentError}
           </div>
         )}
 

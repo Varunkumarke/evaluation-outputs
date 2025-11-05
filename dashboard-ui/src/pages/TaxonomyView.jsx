@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Save, X, Search, Image as ImageIcon, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext'; // ✅ ADD THIS IMPORT
 import './TaxonomyView.css';
 
 const TaxonomyView = ({ onEdit }) => {
   const navigate = useNavigate();
+  const { success, error } = useToast(); // ✅ ADD THIS LINE
   const [allTaxonomies, setAllTaxonomies] = useState([]);
   const [filteredTaxonomies, setFilteredTaxonomies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState(''); // ✅ RENAMED to avoid conflict
   const [selectedTaxonomy, setSelectedTaxonomy] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -24,7 +26,7 @@ const TaxonomyView = ({ onEdit }) => {
   const fetchAllTaxonomies = async () => {
     try {
       setLoading(true);
-      setError('');
+      setComponentError('');
       const response = await fetch('http://localhost:8000/all-taxonomies');
       
       if (!response.ok) {
@@ -35,7 +37,8 @@ const TaxonomyView = ({ onEdit }) => {
       setAllTaxonomies(data.taxonomies || []);
       setFilteredTaxonomies(data.taxonomies || []);
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error('Failed to load taxonomies: ' + err.message); // ✅ TOAST FOR FETCH ERROR
       setAllTaxonomies([]);
       setFilteredTaxonomies([]);
     } finally {
@@ -82,136 +85,70 @@ const TaxonomyView = ({ onEdit }) => {
     );
   };
 
-  // Handle input changes
-  // const handleInputChange = (field, value) => {
-  //   setEditData(prev => {
-  //     const newData = { ...prev, [field]: value };
-      
-  //     // Check if data has changed from original
-  //     if (selectedTaxonomy && hasDataChanged(newData, selectedTaxonomy)) {
-  //       setHasUnsavedChanges(true);
-  //       if (!isEdited && onEdit) {
-  //         setIsEdited(true);
-  //         onEdit();
-  //       }
-  //     } else {
-  //       setHasUnsavedChanges(false);
-  //     }
-      
-  //     return newData;
-  //   });
-  // };
-
-  // // Save changes for selected taxonomy
-  // const handleSave = async () => {
-  //   if (!editData.domain_name.trim()) {
-  //     alert('Domain name cannot be empty');
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await fetch(`http://localhost:8000/taxonomy/${selectedTaxonomy.chapter_id}/${selectedTaxonomy.domain_id}`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(editData)
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to update taxonomy');
-  //     }
-
-  //     const result = await response.json();
-  //     alert('Taxonomy updated successfully!');
-      
-  //     // Update local state
-  //     const updatedTaxonomies = allTaxonomies.map(taxonomy => 
-  //       taxonomy.chapter_id === selectedTaxonomy.chapter_id && taxonomy.domain_id === selectedTaxonomy.domain_id
-  //         ? { ...taxonomy, ...editData }
-  //         : taxonomy
-  //     );
-      
-  //     setAllTaxonomies(updatedTaxonomies);
-  //     setFilteredTaxonomies(updatedTaxonomies);
-  //     setSelectedTaxonomy({ ...selectedTaxonomy, ...editData });
-  //     setIsEditing(false);
-  //     setHasUnsavedChanges(false);
-      
-  //     // Mark as edited after successful save
-  //     if (!isEdited) {
-  //       setIsEdited(true);
-  //       if (onEdit) {
-  //         onEdit();
-  //       }
-  //     }
-  //   } catch (err) {
-  //     alert('Error updating taxonomy: ' + err.message);
-  //   }
-  // };
   // Handle input changes without immediately calling onEdit
-const handleInputChange = (field, value) => {
-  setEditData(prev => {
-    const newData = { ...prev, [field]: value };
-    
-    // Check if data has changed from original
-    if (selectedTaxonomy && hasDataChanged(newData, selectedTaxonomy)) {
-      setHasUnsavedChanges(true);
-    } else {
-      setHasUnsavedChanges(false);
-    }
-    
-    return newData;
-  });
-};
-
-// Update handleSave to call onEdit only on save
-const handleSave = async () => {
-  if (!editData.domain_name.trim()) {
-    alert('Domain name cannot be empty');
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:8000/taxonomy/${selectedTaxonomy.chapter_id}/${selectedTaxonomy.domain_id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(editData)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update taxonomy');
-    }
-
-    const result = await response.json();
-    alert('Taxonomy updated successfully!');
-    
-    // Update local state
-    const updatedTaxonomies = allTaxonomies.map(taxonomy => 
-      taxonomy.chapter_id === selectedTaxonomy.chapter_id && taxonomy.domain_id === selectedTaxonomy.domain_id
-        ? { ...taxonomy, ...editData }
-        : taxonomy
-    );
-    
-    setAllTaxonomies(updatedTaxonomies);
-    setFilteredTaxonomies(updatedTaxonomies);
-    setSelectedTaxonomy({ ...selectedTaxonomy, ...editData });
-    setIsEditing(false);
-    setHasUnsavedChanges(false);
-    
-    // Mark as edited only after successful save
-    if (!isEdited) {
-      setIsEdited(true);
-      if (onEdit) {
-        onEdit();
+  const handleInputChange = (field, value) => {
+    setEditData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Check if data has changed from original
+      if (selectedTaxonomy && hasDataChanged(newData, selectedTaxonomy)) {
+        setHasUnsavedChanges(true);
+      } else {
+        setHasUnsavedChanges(false);
       }
+      
+      return newData;
+    });
+  };
+
+  // Update handleSave to call onEdit only on save
+  const handleSave = async () => {
+    if (!editData.domain_name.trim()) {
+      error('Domain name cannot be empty'); // ✅ TOAST INSTEAD OF ALERT
+      return;
     }
-  } catch (err) {
-    alert('Error updating taxonomy: ' + err.message);
-  }
-};
+
+    try {
+      const response = await fetch(`http://localhost:8000/taxonomy/${selectedTaxonomy.chapter_id}/${selectedTaxonomy.domain_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update taxonomy');
+      }
+
+      const result = await response.json();
+      success('Taxonomy updated successfully!'); // ✅ TOAST INSTEAD OF ALERT
+      
+      // Update local state
+      const updatedTaxonomies = allTaxonomies.map(taxonomy => 
+        taxonomy.chapter_id === selectedTaxonomy.chapter_id && taxonomy.domain_id === selectedTaxonomy.domain_id
+          ? { ...taxonomy, ...editData }
+          : taxonomy
+      );
+      
+      setAllTaxonomies(updatedTaxonomies);
+      setFilteredTaxonomies(updatedTaxonomies);
+      setSelectedTaxonomy({ ...selectedTaxonomy, ...editData });
+      setIsEditing(false);
+      setHasUnsavedChanges(false);
+      
+      // Mark as edited only after successful save
+      if (!isEdited) {
+        setIsEdited(true);
+        if (onEdit) {
+          onEdit();
+        }
+      }
+    } catch (err) {
+      error('Error updating taxonomy: ' + err.message); // ✅ TOAST INSTEAD OF ALERT
+    }
+  };
 
   // Start editing
   const startEditing = () => {
@@ -236,10 +173,10 @@ const handleSave = async () => {
   // Handle image error
   const handleImageError = () => {
     setImageLoading(false);
-    console.error('Failed to load taxonomy image');
+    error('Failed to load taxonomy image'); // ✅ TOAST FOR IMAGE ERROR
   };
 
-  // Download image
+  // Download image - UPDATED WITH TOAST
   const handleDownloadImage = async () => {
     if (!selectedTaxonomy) return;
 
@@ -257,8 +194,19 @@ const handleSave = async () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      success('Image downloaded successfully!'); // ✅ TOAST FOR DOWNLOAD
     } catch (err) {
-      alert('Error downloading image: ' + err.message);
+      error('Error downloading image: ' + err.message); // ✅ TOAST INSTEAD OF ALERT
+    }
+  };
+
+  // Copy URL to clipboard - UPDATED WITH TOAST
+  const copyUrlToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(`http://localhost:8000/taxonomy/image/${selectedTaxonomy._id}`);
+      success('Image URL copied to clipboard!'); // ✅ TOAST FOR COPY
+    } catch (err) {
+      error('Failed to copy URL'); // ✅ TOAST INSTEAD OF ALERT
     }
   };
 
@@ -294,9 +242,9 @@ const handleSave = async () => {
         </div>
       </div>
 
-      {error && (
+      {componentError && ( // ✅ UPDATED VARIABLE NAME
         <div className="error-message">
-          {error}
+          {componentError}
         </div>
       )}
 
@@ -468,7 +416,7 @@ const handleSave = async () => {
                             {`http://localhost:8000/taxonomy/image/${selectedTaxonomy._id}`}
                             <button 
                               className="copy-url-btn"
-                              onClick={() => navigator.clipboard.writeText(`http://localhost:8000/taxonomy/image/${selectedTaxonomy._id}`)}
+                              onClick={copyUrlToClipboard} // ✅ UPDATED: Now uses toast function
                             >
                               Copy
                             </button>

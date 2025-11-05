@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Save, X, Search, Copy, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext'; // ✅ ADD THIS IMPORT
 import './SectionSummaryView.css';
 
 const SectionSummaryView = ({ onEdit }) => {
   const navigate = useNavigate();
+  const { success, error } = useToast(); // ✅ ADD THIS LINE
   const [allSections, setAllSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState(''); // ✅ RENAMED to avoid conflict
   const [selectedSection, setSelectedSection] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
@@ -20,7 +22,7 @@ const SectionSummaryView = ({ onEdit }) => {
   const fetchAllSections = async () => {
     try {
       setLoading(true);
-      setError('');
+      setComponentError('');
       const response = await fetch('http://localhost:8000/all-sections');
       
       if (!response.ok) {
@@ -31,7 +33,8 @@ const SectionSummaryView = ({ onEdit }) => {
       setAllSections(data.sections || []);
       setFilteredSections(data.sections || []);
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error('Failed to load sections: ' + err.message); // ✅ TOAST FOR FETCH ERROR
       setAllSections([]);
       setFilteredSections([]);
     } finally {
@@ -66,137 +69,68 @@ const SectionSummaryView = ({ onEdit }) => {
   };
 
   // Handle text changes during editing
-  // const handleTextChange = (newText) => {
-  //   setEditText(newText);
+  const handleTextChange = (newText) => {
+    setEditText(newText);
     
-  //   // Check if text has actually changed from original
-  //   const originalText = selectedSection.section_summary;
-  //   if (newText !== originalText) {
-  //     setHasUnsavedChanges(true);
-      
-  //     // Mark as edited when user makes changes (even before saving)
-  //     if (!isEdited) {
-  //       setIsEdited(true);
-  //       if (onEdit) {
-  //         onEdit();
-  //       }
-  //     }
-  //   } else {
-  //     setHasUnsavedChanges(false);
-  //   }
-  // };
+    // Check if text has actually changed from original
+    const originalText = selectedSection.section_summary;
+    if (newText !== originalText) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  };
 
-  // // Save all changes for selected section
-  // const handleSaveAll = async () => {
-  //   if (!editText.trim()) {
-  //     alert('Text cannot be empty');
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await fetch(`http://localhost:8000/section-summary/replace/${selectedSection.chapter_id}/${selectedSection.section_id}`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         section_summary: editText
-  //       })
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to update section summary');
-  //     }
-
-  //     const result = await response.json();
-  //     alert('Section summary updated successfully!');
-      
-  //     // Update local state
-  //     const updatedSections = allSections.map(section => 
-  //       section.chapter_id === selectedSection.chapter_id && section.section_id === selectedSection.section_id
-  //         ? { ...section, section_summary: editText }
-  //         : section
-  //     );
-      
-  //     setAllSections(updatedSections);
-  //     setFilteredSections(updatedSections);
-  //     setSelectedSection({ ...selectedSection, section_summary: editText });
-  //     setIsEditing(false);
-  //     setHasUnsavedChanges(false);
-      
-  //     // Mark as edited after successful save
-  //     if (!isEdited) {
-  //       setIsEdited(true);
-  //       if (onEdit) {
-  //         onEdit();
-  //       }
-  //     }
-  //   } catch (err) {
-  //     alert('Error updating section summary: ' + err.message);
-  //   }
-  // };
-  // Handle text changes during editing
-const handleTextChange = (newText) => {
-  setEditText(newText);
-  
-  // Check if text has actually changed from original
-  const originalText = selectedSection.section_summary;
-  if (newText !== originalText) {
-    setHasUnsavedChanges(true);
-  } else {
-    setHasUnsavedChanges(false);
-  }
-};
-
-// Update handleSaveAll to call onEdit only on save
-const handleSaveAll = async () => {
-  if (!editText.trim()) {
-    alert('Text cannot be empty');
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:8000/section-summary/replace/${selectedSection.chapter_id}/${selectedSection.section_id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        section_summary: editText
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update section summary');
+  // Update handleSaveAll to call onEdit only on save
+  const handleSaveAll = async () => {
+    if (!editText.trim()) {
+      error('Text cannot be empty'); // ✅ TOAST INSTEAD OF ALERT
+      return;
     }
 
-    const result = await response.json();
-    alert('Section summary updated successfully!');
-    
-    // Update local state
-    const updatedSections = allSections.map(section => 
-      section.chapter_id === selectedSection.chapter_id && section.section_id === selectedSection.section_id
-        ? { ...section, section_summary: editText }
-        : section
-    );
-    
-    setAllSections(updatedSections);
-    setFilteredSections(updatedSections);
-    setSelectedSection({ ...selectedSection, section_summary: editText });
-    setIsEditing(false);
-    setHasUnsavedChanges(false);
-    
-    // Mark as edited only after successful save
-    if (!isEdited) {
-      setIsEdited(true);
-      if (onEdit) {
-        onEdit();
+    try {
+      const response = await fetch(`http://localhost:8000/section-summary/replace/${selectedSection.chapter_id}/${selectedSection.section_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          section_summary: editText
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update section summary');
       }
+
+      const result = await response.json();
+      success('Section summary updated successfully!'); // ✅ TOAST INSTEAD OF ALERT
+      
+      // Update local state
+      const updatedSections = allSections.map(section => 
+        section.chapter_id === selectedSection.chapter_id && section.section_id === selectedSection.section_id
+          ? { ...section, section_summary: editText }
+          : section
+      );
+      
+      setAllSections(updatedSections);
+      setFilteredSections(updatedSections);
+      setSelectedSection({ ...selectedSection, section_summary: editText });
+      setIsEditing(false);
+      setHasUnsavedChanges(false);
+      
+      // Mark as edited only after successful save
+      if (!isEdited) {
+        setIsEdited(true);
+        if (onEdit) {
+          onEdit();
+        }
+      }
+    } catch (err) {
+      error('Error updating section summary: ' + err.message); // ✅ TOAST INSTEAD OF ALERT
     }
-  } catch (err) {
-    alert('Error updating section summary: ' + err.message);
-  }
-};
+  };
 
   // Start editing
   const startEditing = () => {
@@ -210,27 +144,32 @@ const handleSaveAll = async () => {
     setHasUnsavedChanges(false);
   };
 
-  // Copy to clipboard
+  // Copy to clipboard - UPDATED WITH TOAST
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(editText);
-      alert('Section summary copied to clipboard!');
+      success('Section summary copied to clipboard!'); // ✅ TOAST INSTEAD OF ALERT
     } catch (err) {
-      alert('Failed to copy to clipboard');
+      error('Failed to copy to clipboard'); // ✅ TOAST INSTEAD OF ALERT
     }
   };
 
-  // Download as text file
+  // Download as text file - UPDATED WITH TOAST
   const downloadAsFile = () => {
-    const blob = new Blob([editText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedSection.chapter_id}_${selectedSection.section_id}_summary.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      const blob = new Blob([editText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedSection.chapter_id}_${selectedSection.section_id}_summary.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      success('Section summary downloaded successfully!'); // ✅ TOAST FOR DOWNLOAD
+    } catch (err) {
+      error('Failed to download file'); // ✅ TOAST INSTEAD OF ALERT
+    }
   };
 
   // Count words and characters
@@ -269,9 +208,9 @@ const handleSaveAll = async () => {
         </div>
       </div>
 
-      {error && (
+      {componentError && ( // ✅ UPDATED VARIABLE NAME
         <div className="error-message">
-          {error}
+          {componentError}
         </div>
       )}
 

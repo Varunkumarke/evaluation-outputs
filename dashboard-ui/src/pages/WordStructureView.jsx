@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X, Search } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import './WordStructureView.css';
 
 const WordStructureView = ({ onEdit }) => {
   const navigate = useNavigate();
+  const { success, error } = useToast();
   const [allDomainWords, setAllDomainWords] = useState([]);
   const [filteredDomainWords, setFilteredDomainWords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState('');
   const [selectedWord, setSelectedWord] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -17,12 +19,15 @@ const WordStructureView = ({ onEdit }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isEdited, setIsEdited] = useState(false);
+  const [showAddFieldModal, setShowAddFieldModal] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
+  const [fieldToRemove, setFieldToRemove] = useState(null); // ✅ NEW STATE for remove confirmation
 
   // Fetch all domain words data
   const fetchAllDomainWords = async () => {
     try {
       setLoading(true);
-      setError('');
+      setComponentError('');
       const response = await fetch('http://localhost:8000/all-domain-words');
       
       if (!response.ok) {
@@ -33,7 +38,8 @@ const WordStructureView = ({ onEdit }) => {
       setAllDomainWords(data.domain_words || []);
       setFilteredDomainWords(data.domain_words || []);
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error('Failed to load domain words: ' + err.message);
       setAllDomainWords([]);
       setFilteredDomainWords([]);
     } finally {
@@ -82,7 +88,8 @@ const WordStructureView = ({ onEdit }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update word structure');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update word structure');
       }
 
       // Update local state
@@ -112,9 +119,9 @@ const WordStructureView = ({ onEdit }) => {
         }
       }
       
-      alert('Word structure updated successfully!');
+      success('Word structure updated successfully!');
     } catch (err) {
-      alert('Error updating word structure: ' + err.message);
+      error('Error updating word structure: ' + err.message);
     }
   };
 
@@ -141,21 +148,48 @@ const WordStructureView = ({ onEdit }) => {
     setHasUnsavedChanges(true);
   };
 
-  const addNewField = () => {
-    const fieldName = prompt('Enter new field name:');
-    if (fieldName && fieldName.trim()) {
-      handleStructureChange(fieldName.trim(), '');
+  // Add Field Modal Functions
+  const openAddFieldModal = () => {
+    setShowAddFieldModal(true);
+    setNewFieldName('');
+  };
+
+  const closeAddFieldModal = () => {
+    setShowAddFieldModal(false);
+    setNewFieldName('');
+  };
+
+  const confirmAddField = () => {
+    if (newFieldName.trim()) {
+      handleStructureChange(newFieldName.trim(), '');
+      closeAddFieldModal();
+      success(`Field "${newFieldName}" added successfully!`); // ✅ Success toast
+    } else {
+      error('Field name cannot be empty');
     }
   };
 
-  const removeField = (key) => {
-    const newStructure = { ...editData.word_structure };
-    delete newStructure[key];
-    setEditData(prev => ({
-      ...prev,
-      word_structure: newStructure
-    }));
-    setHasUnsavedChanges(true);
+  // ✅ UPDATED: Remove Field with Confirmation
+  const openRemoveConfirmation = (fieldName) => {
+    setFieldToRemove(fieldName);
+  };
+
+  const closeRemoveConfirmation = () => {
+    setFieldToRemove(null);
+  };
+
+  const confirmRemoveField = () => {
+    if (fieldToRemove) {
+      const newStructure = { ...editData.word_structure };
+      delete newStructure[fieldToRemove];
+      setEditData(prev => ({
+        ...prev,
+        word_structure: newStructure
+      }));
+      setHasUnsavedChanges(true);
+      success(`Field "${fieldToRemove}" removed successfully!`); // ✅ Success toast
+      closeRemoveConfirmation();
+    }
   };
 
   return (
@@ -191,9 +225,9 @@ const WordStructureView = ({ onEdit }) => {
         </div>
       </div>
 
-      {error && (
+      {componentError && (
         <div className="error-message">
-          {error}
+          {componentError}
         </div>
       )}
 
@@ -287,7 +321,7 @@ const WordStructureView = ({ onEdit }) => {
                       {isEditing && (
                         <button 
                           className="add-field-btn"
-                          onClick={addNewField}
+                          onClick={openAddFieldModal}
                         >
                           + Add Field
                         </button>
@@ -321,7 +355,7 @@ const WordStructureView = ({ onEdit }) => {
                             />
                             <button 
                               className="remove-field-btn"
-                              onClick={() => removeField(key)}
+                              onClick={() => openRemoveConfirmation(key)} // ✅ UPDATED: Opens confirmation
                             >
                               Remove
                             </button>
@@ -361,6 +395,74 @@ const WordStructureView = ({ onEdit }) => {
                 <p>Click on a domain word from the list to view and edit its word structure</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Field Modal */}
+      {showAddFieldModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Add New Field</h3>
+            </div>
+            <div className="modal-body">
+              <label htmlFor="fieldName">Field Name:</label>
+              <input
+                type="text"
+                id="fieldName"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+                placeholder="Enter field name..."
+                className="modal-input"
+                onKeyPress={(e) => e.key === 'Enter' && confirmAddField()}
+                autoFocus
+              />
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="action-btn cancel-btn"
+                onClick={closeAddFieldModal}
+              >
+                Cancel
+              </button>
+              <button 
+                className="action-btn save-btn"
+                onClick={confirmAddField}
+                disabled={!newFieldName.trim()}
+              >
+                Add Field
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ REMOVE FIELD CONFIRMATION MODAL */}
+      {fieldToRemove && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Confirm Remove</h3>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to remove the field "<strong>{fieldToRemove}</strong>"?</p>
+              <p className="warning-text">This action cannot be undone.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="action-btn cancel-btn"
+                onClick={closeRemoveConfirmation}
+              >
+                Cancel
+              </button>
+              <button 
+                className="action-btn delete-btn"
+                onClick={confirmRemoveField}
+              >
+                Remove Field
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Save, X, Search, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext'; // ✅ Toast import
 import './DomainWordsView.css';
+
 
 const DomainWordsView = ({ onEdit }) => {
   const navigate = useNavigate();
+  const { success, error } = useToast(); // ✅ Toast hook
   const [allDomainWords, setAllDomainWords] = useState([]);
   const [filteredDomainWords, setFilteredDomainWords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [componentError, setComponentError] = useState(''); // ✅ Renamed to avoid conflict
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +22,7 @@ const DomainWordsView = ({ onEdit }) => {
   const fetchAllDomainWords = async () => {
     try {
       setLoading(true);
-      setError('');
+      setComponentError('');
       const response = await fetch('http://localhost:8000/all-domain-words');
       
       if (!response.ok) {
@@ -30,7 +33,8 @@ const DomainWordsView = ({ onEdit }) => {
       setAllDomainWords(data.domain_words || []);
       setFilteredDomainWords(data.domain_words || []);
     } catch (err) {
-      setError(err.message);
+      setComponentError(err.message);
+      error('Failed to load domain words: ' + err.message); // ✅ Toast for fetch error
       setAllDomainWords([]);
       setFilteredDomainWords([]);
     } finally {
@@ -71,10 +75,10 @@ const DomainWordsView = ({ onEdit }) => {
     setEditData({});
   };
 
-  // Save domain word
+  // Save domain word - UPDATED WITH TOASTS ✅
   const handleSave = async (word) => {
     if (!editData.domain_id.trim()) {
-      alert('Domain ID cannot be empty');
+      error('Domain ID cannot be empty'); // ✅ Toast instead of alert
       return;
     }
 
@@ -90,7 +94,8 @@ const DomainWordsView = ({ onEdit }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update domain word');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update domain word');
       }
 
       // Update local state
@@ -113,13 +118,13 @@ const DomainWordsView = ({ onEdit }) => {
         }
       }
       
-      alert('Domain ID updated successfully!');
+      success('Domain word updated successfully!'); // ✅ Toast instead of alert
     } catch (err) {
-      alert('Error updating domain ID: ' + err.message);
+      error('Error updating domain word: ' + err.message); // ✅ Toast instead of alert
     }
   };
 
-  // Delete domain word
+  // Delete domain word - UPDATED WITH TOASTS ✅
   const handleDelete = async (word) => {
     try {
       const response = await fetch(`http://localhost:8000/domain-words/${word.chapter_id}/${word.domain_id}`, {
@@ -147,9 +152,9 @@ const DomainWordsView = ({ onEdit }) => {
         }
       }
       
-      alert('Domain word deleted successfully!');
+      success('Domain word deleted successfully!'); // ✅ Toast instead of alert
     } catch (err) {
-      alert('Error deleting domain word: ' + err.message);
+      error('Error deleting domain word: ' + err.message); // ✅ Toast instead of alert
     }
   };
 
@@ -185,9 +190,9 @@ const DomainWordsView = ({ onEdit }) => {
         </div>
       </div>
 
-      {error && (
+      {componentError && ( // ✅ Updated variable name
         <div className="error-message">
-          {error}
+          {componentError}
         </div>
       )}
 
@@ -325,3 +330,4 @@ const DomainWordsView = ({ onEdit }) => {
 };
 
 export default DomainWordsView;
+

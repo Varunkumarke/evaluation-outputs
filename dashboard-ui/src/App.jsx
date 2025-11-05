@@ -15,7 +15,11 @@ import WordStructureView from './pages/WordStructureView';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
-// Create a simple logging system
+import './pages/Toast.css'; 
+// import './pages/LoadingSpinner.css'       // ✅ Import from pages folder
+// import './pages/LoadingSpinner.css'; // If you have this file
+
+
 const activityLog = {
   logs: [],
   
